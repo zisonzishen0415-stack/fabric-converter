@@ -115,10 +115,6 @@
   .hint b{font-weight:600}
 
   footer{margin-top:26px;color:var(--muted);font-size:12px;line-height:1.8;text-align:center}
-  footer kbd{
-    font-family:inherit;background:color-mix(in srgb,var(--muted) 12%,transparent);
-    border-radius:5px;padding:1px 6px;font-size:11px;
-  }
   #toast{
     position:fixed;left:50%;bottom:34px;transform:translate(-50%,16px);opacity:0;pointer-events:none;
     background:#101828;color:#fff;font-size:13px;padding:10px 18px;border-radius:22px;
@@ -132,8 +128,7 @@
     .res .v.hero{font-size:23px}
     .topbar{padding:11px 0 10px}
   }
-  @media print{ .topbar{position:static} .btn,.chips{display:none} .card{break-inside:avoid} }
-</style>
+  @media print{ .topbar{position:static} .btn,.chips{display:none} .card{break-inside:avoid} }</style>
 </head>
 <body>
 <div class="wrap">
@@ -287,8 +282,7 @@
   </div>
 
   <footer>
-    点击任意结果数字即可复制　·　纯本地计算，不联网、不上传数据<br>
-    快捷键 <kbd>Ctrl</kbd>+<kbd>P</kbd> 可直接打印成报价单
+    点击任意结果数字即可复制　·　纯本地计算，不联网、不上传数据
   </footer>
 </div>
 <div id="toast"></div>
