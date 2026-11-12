@@ -1,0 +1,11 @@
+{
+  "name": "fabric-converter",
+  "version": "1.0.0",
+  "description": "面料报价换算：公斤价 / 米价 / 码价 / 克重 / 门幅 / 空差，离线单文件工具",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test/check.mjs"
+  },
+  "license": "MIT"
+}
