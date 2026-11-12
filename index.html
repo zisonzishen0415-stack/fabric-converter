@@ -182,11 +182,11 @@
 
     <!-- ② -->
     <section class="card">
-      <h2><span class="badge">②</span>公斤价 → 净布价</h2>
-      <div class="formula">笔记口径 = 公斤价 ÷ 25 × (25 + 纸管 + 空差)<br>净重口径 = 公斤价 × 25 ÷ (25 − 纸管 − 空差)</div>
+      <h2><span class="badge">②</span>公斤价 → 净布价（实得布）</h2>
+      <div class="formula">净布价 = 每卷金额 ÷ 实得净布重量 = 公斤价 × 毛重 ÷（毛重 − 纸管 − 空差）</div>
       <div class="fields">
-        <div class="f"><label>公斤价 (元/kg)</label><input id="b_price" type="number" step="0.01" inputmode="decimal" value="28"></div>
-        <div class="f"><label>标称卷重 (kg)</label><input id="b_base" type="number" step="0.5" inputmode="decimal" value="25"></div>
+        <div class="f"><label>公斤价（含纸管）</label><input id="b_price" type="number" step="0.01" inputmode="decimal" value="28"></div>
+        <div class="f"><label>每卷毛重 (kg)</label><input id="b_base" type="number" step="0.5" inputmode="decimal" value="25"></div>
         <div class="f"><label>纸管 (kg)</label><input id="b_tube" type="number" step="0.1" inputmode="decimal" value="0.5"></div>
         <div class="f"><label>空差
             <select class="unit" id="b_gunit"><option value="kg">kg</option><option value="%">按 %</option></select>
@@ -195,14 +195,13 @@
         </div>
       </div>
       <div class="out">
-        <div class="res"><span class="k">净布价（笔记口径）</span><span class="v hero" id="b_net">—</span></div>
-        <div class="res"><span class="k">净布价（净重口径）</span><span class="v alt" id="b_net2">—</span></div>
-        <div class="res"><span class="k">两种口径差价</span><span class="v" id="b_diff">—</span></div>
-        <div class="res"><span class="k">计费重量 / 净布重量</span><span class="v" id="b_weights">—</span></div>
-        <div class="res"><span class="k">每卷金额</span><span class="v" id="b_roll">—</span></div>
-        <div class="res"><span class="k">笔记口径上浮</span><span class="v" id="b_up">—</span></div>
+        <div class="res"><span class="k">净布价（实得布单价）</span><span class="v hero" id="b_net">—</span></div>
+        <div class="res"><span class="k">实得净布重量</span><span class="v" id="b_netkg">—</span></div>
+        <div class="res"><span class="k">每卷金额（按毛重）</span><span class="v" id="b_roll">—</span></div>
+        <div class="res"><span class="k">比公斤价高</span><span class="v" id="b_up">—</span></div>
+        <div class="res"><span class="k">对照：对方按 25+纸管+空差 计费</span><span class="v alt" id="b_net2">—</span></div>
       </div>
-      <p class="hint warn">两种口径行业里都有人用：<b>笔记口径</b>把纸管和空差当作额外计费重量加上去；<b>净重口径</b>是标称卷重扣掉纸管和空差后、你真正拿到那点布的单价。差价就是可谈空间，报完价先问清对方按哪种算。</p>
+      <p class="hint warn">报价是<b>含纸管</b>的公斤价，每卷付的是毛重的钱，实际到手的布少掉纸管和空差，所以净布价一定高于公斤价。<br>最后一行只是另一种结算口径的对照（纸管空差也算成布的重量卖，但净布仍给足 25kg），正常核价用不到。</p>
     </section>
 
     <!-- ③ -->
@@ -327,16 +326,23 @@ function gramsPerYard(widthM, gsm) {
   return gramsPerMeter(widthM, gsm) * YARD_M;
 }
 
-/* ② 净布价：笔记口径（纸管+空差 加在计费重量上） */
+/* ② 净布价 = 每卷金额 ÷ 实得净布重量
+   报价含纸管：每卷按毛重付款，实际到手的布要扣掉纸管和空差
+   = 公斤价 × 毛重 ÷ (毛重 − 纸管 − 空差) */
 function netPricePerKg(kgPrice, baseKg, tubeKg, gapKg) {
+  const net = baseKg - tubeKg - gapKg;
+  if (!(baseKg > 0) || !(net > 0)) return NaN;
+  return kgPrice * baseKg / net;
+}
+/* ② 对照口径：对方把纸管+空差也算成布的重量计费，但净布仍按毛重给足 */
+function netPricePerKgExtraBasis(kgPrice, baseKg, tubeKg, gapKg) {
   if (!(baseKg > 0)) return NaN;
   return kgPrice / baseKg * (baseKg + tubeKg + gapKg);
 }
-/* ② 净布价：净重口径（标称卷重扣掉纸管+空差，按实得净布算） */
-function netPricePerKgByNetWeight(kgPrice, baseKg, tubeKg, gapKg) {
-  const net = baseKg - tubeKg - gapKg;
-  if (!(net > 0)) return NaN;
-  return kgPrice * baseKg / net;
+/* ② 每卷金额（报价含纸管，按毛重结算） */
+function rollAmount(kgPrice, baseKg) {
+  if (!(baseKg > 0)) return NaN;
+  return kgPrice * baseKg;
 }
 
 /* ③ 空差折算：实际单价 = 报价 ÷ (1 − 空差%) */
@@ -393,7 +399,7 @@ function priceTriangle(value, unit, widthM, gsm) {
 const Calc = {
   YARD_M, INCH_M, OZ_YD2_G_M2, widthToMeters, gsmFrom, gapInKg,
   metersPerKg, yardsPerKg, gramsPerMeter, gramsPerYard,
-  netPricePerKg, netPricePerKgByNetWeight, priceWithGap, gapRate,
+  netPricePerKg, netPricePerKgExtraBasis, rollAmount, priceWithGap, gapRate,
   yardPriceToMeterPrice, meterPriceToYardPrice,
   pricePerKgFromYardPrice, pricePerKgFromMeterPrice,
   pricePerMeterFromKg, pricePerYardFromKg, priceTriangle,
@@ -435,14 +441,12 @@ function renderB() {
   const tube = val('b_tube') || 0;
   const gapRaw = Calc.gapInKg(val('b_gap'), $('b_gunit').value, base);
   const gap = Number.isFinite(gapRaw) ? gapRaw : 0;
-  const net1 = Calc.netPricePerKg(p, base, tube, gap);
-  const net2 = Calc.netPricePerKgByNetWeight(p, base, tube, gap);
-  put('b_net', fmt(net1, 2), ' 元/kg');
-  put('b_net2', fmt(net2, 2), ' 元/kg');
-  put('b_diff', (Number.isFinite(net1) && Number.isFinite(net2)) ? fmt(net2 - net1, 2) : '—', ' 元/kg');
-  put('b_weights', fmt(base + tube + gap, 2) + ' / ' + fmt(base - tube - gap, 2), ' kg');
-  put('b_roll', fmt(p * (base + tube + gap), 2), ' 元');
-  put('b_up', (Number.isFinite(net1) && p > 0) ? fmt((net1 / p - 1) * 100, 1) : '—', ' %');
+  const net = Calc.netPricePerKg(p, base, tube, gap);
+  put('b_net', fmt(net, 2), ' 元/kg');
+  put('b_netkg', fmt(base - tube - gap, 2), ' kg');
+  put('b_roll', fmt(Calc.rollAmount(p, base), 2), ' 元');
+  put('b_up', (Number.isFinite(net) && p > 0) ? fmt((net / p - 1) * 100, 1) : '—', ' %');
+  put('b_net2', fmt(Calc.netPricePerKgExtraBasis(p, base, tube, gap), 2), ' 元/kg');
 }
 
 /* ③ */

@@ -26,13 +26,14 @@ check('① 1公斤出码数', Calc.yardsPerKg(1.4, 150), 5.2077);
 check('① 每米重量 1.4×150', Calc.gramsPerMeter(1.4, 150), 210);
 check('① 每码重量', Calc.gramsPerYard(1.4, 150), 192.02, 0.01);
 
-// ② 净布价
-check('② 笔记口径 28÷25×(25+0.5+1.5)', Calc.netPricePerKg(28, 25, 0.5, 1.5), 30.24);
-check('② 净重口径 28×25÷(25-0.5-1.5)', Calc.netPricePerKgByNetWeight(28, 25, 0.5, 1.5), 30.4348, 0.001);
+// ② 净布价 = 每卷金额 ÷ 实得净布重量（报价含纸管）
+check('② 28×25÷(25-0.5-1.5)', Calc.netPricePerKg(28, 25, 0.5, 1.5), 30.4348, 0.001);
+check('② 每卷金额 28×25', Calc.rollAmount(28, 25), 700);
+check('② 对照口径 28÷25×(25+0.5+1.5)', Calc.netPricePerKgExtraBasis(28, 25, 0.5, 1.5), 30.24);
 check('② 空差按 7% 折算 = 1.75kg', Calc.gapInKg(7, '%', 25), 1.75);
 check('② 空差按 kg 直填', Calc.gapInKg(1.5, 'kg', 25), 1.5);
-check('② 笔记口径(7%空差)', Calc.netPricePerKg(28, 25, 0.5, Calc.gapInKg(7, '%', 25)), 30.52);
-check('② 净重口径(7%空差)', Calc.netPricePerKgByNetWeight(28, 25, 0.5, Calc.gapInKg(7, '%', 25)), 30.7692, 0.001);
+check('② 7%空差 → 净布价', Calc.netPricePerKg(28, 25, 0.5, Calc.gapInKg(7, '%', 25)), 30.7692, 0.001);
+check('② 对照口径(7%空差)', Calc.netPricePerKgExtraBasis(28, 25, 0.5, Calc.gapInKg(7, '%', 25)), 30.52);
 
 // ③ 空差：4元/米 93空 → 4 ÷ 0.93
 check('③ 4÷0.93', Calc.priceWithGap(4, 7), 4.3011);
@@ -75,7 +76,8 @@ for (const [w, g] of [[0, 150], [1.4, 0], [NaN, 150], [1.4, NaN], [-1, 150]]) {
 }
 assert.ok(Number.isNaN(Calc.priceWithGap(4, 100)), '空差 100% 应返回 NaN');
 assert.ok(Number.isNaN(Calc.priceWithGap(4, 120)), '空差 120% 应返回 NaN');
-assert.ok(Number.isNaN(Calc.netPricePerKgByNetWeight(28, 25, 20, 10)), '纸管+空差超过卷重应返回 NaN');
+assert.ok(Number.isNaN(Calc.netPricePerKg(28, 25, 20, 10)), '纸管+空差超过毛重应返回 NaN');
+assert.ok(Number.isNaN(Calc.netPricePerKg(28, 25, 0.5, 24.5)), '净布重量为 0 应返回 NaN');
 assert.ok(Number.isNaN(Calc.gapInKg(1.5, 'kg', 0)), '标称卷重为 0 应返回 NaN');
 assert.ok(Number.isNaN(Calc.widthToMeters(0, 'in')), '门幅为 0 应返回 NaN');
 pass += 4;
