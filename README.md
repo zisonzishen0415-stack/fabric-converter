@@ -2,6 +2,8 @@
 
 > 面料报价最常用的 5 种换算，一个 HTML 文件搞定。双击即用，不装软件、不联网、不上传数据。
 
+**在线使用（免下载）**：<https://zisonzishen0415-stack.github.io/fabric-converter/>
+
 ![界面截图](docs/screenshot.png)
 
 做面料生意时，同一块布要同时面对公斤价、米价、码价、克重、门幅、空差、纸管、净布价——
@@ -29,6 +31,10 @@
 - **⑤ 三价互转**：输入任一价格 + 门幅 + 克重，一次给出元/kg、元/米、元/码
 
 ## 使用方法
+
+**方式一 · 在线打开（最快）**：直接访问 <https://zisonzishen0415-stack.github.io/fabric-converter/>，手机、电脑浏览器都行，可加到桌面/收藏夹。
+
+**方式二 · 离线打开**：
 
 1. 下载 `index.html`（或整个仓库）
 2. 双击用浏览器打开（Edge / Chrome / Safari 都行）
@@ -77,6 +83,18 @@ npm test
 ```
 
 自检会：从 HTML 中提取计算逻辑 → 验证 5 个公式的已知算例 → 校验三价互转一致性 → 校验单位换算 → 校验非法输入不会产生 `Infinity`/负价格 → 校验页面引用的元素 id 是否存在、快捷选项是否指向有效元素、是否零外部依赖。当前 **48 项断言**。
+
+## 部署
+
+站点由 GitHub Pages 直接托管 `main` 分支根目录的 `index.html`，没有构建步骤、没有产物目录：
+
+| 项 | 值 |
+|---|---|
+| 线上地址 | <https://zisonzishen0415-stack.github.io/fabric-converter/> |
+| 仓库 | <https://github.com/zisonzishen0415-stack/fabric-converter> |
+| 源目录 | `main` 分支 `/`（根目录） |
+
+改完 `index.html` 推到 `main`，等 1 分钟左右 Pages 自动重新发布；`.github/workflows/test.yml` 会先跑一遍 `node test/check.mjs` 自检。
 
 ## 已知取舍
 
