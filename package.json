@@ -5,7 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node test/check.mjs"
+    "test": "node test/check.mjs",
+    "build:exe": "node tools/build-exe.mjs"
   },
   "license": "MIT"
 }
