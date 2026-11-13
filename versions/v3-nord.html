@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>面料换算工具 · 公斤 / 米 / 码 / 克重 / 空差</title>
+<meta name="description" content="面料报价换算：公斤价、米价、码价、克重、门幅、空差、净布价，离线单文件工具。">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#e5e9f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#2e3440" media="(prefers-color-scheme: dark)">
+<style>
+  :root{
+    /* ===== Nord 色板，页面所有颜色只从这里取 ===== */
+    --n0:#2e3440; --n1:#3b4252; --n2:#434c5e; --n3:#4c566a;   /* Polar Night */
+    --n4:#d8dee9; --n5:#e5e9f0; --n6:#eceff4;                  /* Snow Storm  */
+    --n7:#8fbcbb; --n8:#88c0d0; --n9:#81a1c1; --n10:#5e81ac;   /* Frost       */
+    --n11:#bf616a; --n12:#d08770; --n13:#ebcb8b; --n14:#a3be8c; --n15:#b48ead; /* Aurora */
+    --mono:ui-monospace,"SFMono-Regular","SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+
+    /* ===== 浅色：Snow Storm 机身 + Polar Night 按键与屏幕 ===== */
+    --desk:var(--n5); --desk-2:var(--n6);
+    --body:var(--n6); --body-2:var(--n5);
+    --line:var(--n4); --line-2:var(--n4);
+    --ink:var(--n0); --muted:var(--n3); --muted-2:color-mix(in srgb,var(--n3) 88%,var(--n4));
+    --key:var(--n2); --key-2:var(--n1); --key-line:var(--n3); --key-ink:var(--n6);
+    --key-shadow:color-mix(in srgb,var(--n0) 45%,transparent); --key-hi:color-mix(in srgb,var(--n6) 12%,transparent);
+    --acc:var(--n10); --acc-ink:var(--n6);
+    --warn-ink:color-mix(in srgb,var(--n12) 72%,var(--n0));
+    --card-hi:color-mix(in srgb,var(--n6) 70%,transparent);
+    --shadow:0 18px 40px -26px color-mix(in srgb,var(--n0) 42%,transparent);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      /* ===== 深色：Polar Night 机身 ===== */
+      --desk:var(--n0); --desk-2:var(--n1);
+      --body:var(--n1); --body-2:color-mix(in srgb,var(--n1) 88%,var(--n2));
+      --line:var(--n3); --line-2:var(--n3);
+      --ink:var(--n6); --muted:var(--n9); --muted-2:color-mix(in srgb,var(--n9) 82%,var(--n4));
+      --key:var(--n2); --key-2:var(--n1); --key-line:var(--n3); --key-ink:var(--n6);
+      --key-shadow:color-mix(in srgb,var(--n0) 70%,transparent); --key-hi:color-mix(in srgb,var(--n6) 6%,transparent);
+      --acc:var(--n8); --acc-ink:var(--n0);
+      --warn-ink:var(--n13);
+      --card-hi:color-mix(in srgb,var(--n6) 5%,transparent);
+      --shadow:0 24px 48px -28px color-mix(in srgb,var(--n0) 92%,transparent);
+    }
+  }
+  *{box-sizing:border-box}
+  html{scrollbar-color:var(--n3) transparent;scrollbar-width:thin}
+  ::-webkit-scrollbar{width:11px;height:11px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--n3);border-radius:8px;border:3px solid transparent;background-clip:content-box}
+  ::-webkit-scrollbar-thumb:hover{background:var(--n9);background-clip:content-box}
+  ::selection{background:color-mix(in srgb,var(--n10) 75%,transparent);color:var(--n6)}
+  body{
+    margin:0; padding:0 16px 56px; color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    background:radial-gradient(120% 70% at 50% -10%,var(--desk-2),var(--desk) 72%) fixed;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+
+  /* ---------- 顶栏 ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:13px;
+    padding:12px 0;margin-bottom:16px;
+    background:color-mix(in srgb,var(--desk) 88%,transparent);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .logo{
+    width:40px;height:40px;border-radius:12px;flex:0 0 auto;display:grid;place-items:center;
+    background:linear-gradient(180deg,var(--n2),var(--n0));color:var(--n8);
+    font:700 16px/1 var(--mono);
+    box-shadow:0 2px 0 color-mix(in srgb,var(--n0) 45%,transparent),0 0 0 1px var(--n3) inset;
+  }
+  .brand h1{font-size:16.5px;margin:0;letter-spacing:.3px;line-height:1.25;font-weight:700}
+  .brand p{margin:2px 0 0;font:600 11px/1.3 var(--mono);color:var(--muted-2);letter-spacing:.08em}
+  .spacer{flex:1}
+  .btn{
+    font:600 12.5px/1 inherit;color:var(--key-ink);cursor:pointer;
+    padding:9px 13px;border-radius:9px;border:1px solid var(--key-line);
+    background:linear-gradient(180deg,var(--key-2),var(--key));
+    box-shadow:0 2px 0 var(--key-shadow),0 1px 0 var(--key-hi) inset;
+    transition:.12s;
+  }
+  .btn:hover{color:var(--n8);border-color:color-mix(in srgb,var(--acc) 55%,var(--key-line))}
+  .btn:active{transform:translateY(1px);box-shadow:0 1px 0 var(--key-shadow)}
+
+  /* ---------- 面板 ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:15px}
+  @media (min-width:820px){ .card.wide{grid-column:span 2} }
+  .card{
+    border-radius:18px;padding:17px 17px 15px;
+    background:linear-gradient(180deg,var(--body),var(--body-2));
+    border:1px solid var(--line);
+    box-shadow:var(--shadow),0 1px 0 var(--card-hi) inset;
+  }
+  .chead{display:flex;align-items:center;gap:9px;margin-bottom:9px;flex-wrap:wrap}
+  .chead h2{font-size:14.5px;margin:0;font-weight:700;letter-spacing:.2px;line-height:1.35}
+  .badge{
+    flex:0 0 auto;font:700 11px/1 var(--mono);letter-spacing:.06em;
+    color:var(--n6);padding:5px 7px;border-radius:7px;
+    background:linear-gradient(180deg,var(--n10),color-mix(in srgb,var(--n10) 76%,var(--n0)));
+    box-shadow:0 2px 0 color-mix(in srgb,var(--n0) 40%,transparent);
+  }
+  .tag{
+    margin-left:auto;font:600 10.5px/1 var(--mono);letter-spacing:.05em;
+    color:var(--muted-2);border:1px dashed var(--line-2);border-radius:6px;padding:4px 6px;
+  }
+  .formula{
+    font:500 11.5px/1.6 var(--mono);color:var(--muted-2);
+    background:color-mix(in srgb,var(--n3) 10%,transparent);
+    border-left:2px solid var(--acc);border-radius:0 8px 8px 0;
+    padding:8px 10px;margin:0 0 12px;word-break:break-word;
+  }
+
+  /* ---------- 按键式输入（浅色下也是深色键） ---------- */
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card.wide .fields{grid-template-columns:repeat(auto-fit,minmax(185px,1fr))}
+  .f.wide{grid-column:1/-1}
+  .f label{
+    display:flex;align-items:center;justify-content:space-between;gap:6px;
+    font-size:11.5px;color:var(--muted);margin-bottom:5px;min-height:21px;
+  }
+  .f label .unit{
+    width:auto;flex:0 0 auto;padding:4px 6px;border-radius:6px;cursor:pointer;
+    font:600 11px/1 var(--mono);color:var(--key-ink);text-align:center;
+    border:1px solid var(--key-line);background:linear-gradient(180deg,var(--key-2),var(--key));
+    box-shadow:0 1px 0 var(--key-shadow);transition:.12s;
+  }
+  .f label .unit:hover,.f label .unit:focus{
+    color:var(--n8);border-color:color-mix(in srgb,var(--n8) 55%,var(--key-line));outline:none;
+  }
+  input,select{
+    width:100%;padding:10px 11px;border-radius:10px;
+    border:1px solid var(--key-line);color:var(--key-ink);
+    font:600 16.5px/1.15 var(--mono);text-align:right;caret-color:var(--n8);
+    background:linear-gradient(180deg,var(--key-2),var(--key));
+    box-shadow:0 2px 0 var(--key-shadow),0 1px 0 var(--key-hi) inset;
+    transition:border-color .12s,box-shadow .12s,transform .06s;
+    -moz-appearance:textfield;appearance:textfield;
+  }
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input:hover,select:hover{border-color:color-mix(in srgb,var(--n9) 60%,var(--key-line))}
+  input:focus,select:focus{
+    outline:none;border-color:var(--n8);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--n8) 24%,transparent),0 1px 0 var(--key-shadow);
+  }
+  input:active{transform:translateY(1px);box-shadow:0 1px 0 var(--key-shadow)}
+
+  /* ---------- 快捷键 ---------- */
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .chip{
+    font:600 11.5px/1 var(--mono);cursor:pointer;color:var(--key-ink);
+    padding:7px 9px;border-radius:8px;border:1px solid var(--key-line);
+    background:linear-gradient(180deg,var(--key-2),var(--key));
+    box-shadow:0 2px 0 var(--key-shadow),0 1px 0 var(--key-hi) inset;
+    transition:.12s;
+  }
+  .chip:hover{color:var(--n0);border-color:var(--n8);background:var(--n8)}
+  .chip:active{transform:translateY(1px);box-shadow:0 1px 0 var(--key-shadow)}
+
+  /* ---------- LCD 屏：两种配色下都是 Polar Night ---------- */
+  .out{
+    position:relative;margin-top:13px;padding:11px 13px 9px;border-radius:12px;
+    background:linear-gradient(180deg,var(--n0),color-mix(in srgb,var(--n0) 90%,var(--n1)));
+    box-shadow:inset 0 2px 12px color-mix(in srgb,var(--n0) 70%,transparent),
+               inset 0 0 0 1px color-mix(in srgb,var(--n8) 20%,transparent),
+               0 1px 0 var(--card-hi);
+  }
+  .out::after{
+    content:"";position:absolute;inset:0;border-radius:12px;pointer-events:none;opacity:.45;
+    background:repeating-linear-gradient(0deg,color-mix(in srgb,var(--n0) 60%,transparent) 0 1px,transparent 1px 3px);
+  }
+  .res{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 10px;padding:4px 0}
+  .res .k{font-size:12px;color:var(--n9);letter-spacing:.02em}
+  .res .v{
+    margin-left:auto;cursor:pointer;border-radius:6px;padding:0 2px;
+    font:600 19px/1.25 var(--mono);color:var(--n4);
+    letter-spacing:.02em;word-break:break-word;
+    transition:background .12s;
+  }
+  .res .v:hover{background:color-mix(in srgb,var(--n8) 16%,transparent)}
+  .res .v small{font:500 11px/1 var(--mono);color:var(--n9);margin-left:5px;letter-spacing:0}
+  .res .v.hero{font-size:26px;color:var(--n8);text-shadow:0 0 16px color-mix(in srgb,var(--n8) 45%,transparent)}
+  .res .v.alt{color:var(--n13);text-shadow:0 0 12px color-mix(in srgb,var(--n13) 28%,transparent)}
+  .res .v.txt{font-size:17px;letter-spacing:0;text-shadow:none}
+  .res.hero-row{border-bottom:1px dashed color-mix(in srgb,var(--n8) 26%,transparent);padding-bottom:7px;margin-bottom:3px}
+  .status{
+    margin-top:6px;padding-top:6px;font:600 10.5px/1.5 var(--mono);color:var(--n14);
+    border-top:1px solid color-mix(in srgb,var(--n8) 14%,transparent);
+  }
+  .status.warn{color:var(--n13)}
+
+  /* ---------- 折叠的对照口径 ---------- */
+  .basis{margin-top:10px;border:1px dashed var(--line-2);border-radius:10px;padding:0 10px;background:color-mix(in srgb,var(--n3) 9%,transparent)}
+  .basis summary{cursor:pointer;list-style:none;padding:8px 0;font:600 11.5px/1.4 var(--mono);color:var(--muted-2)}
+  .basis summary::-webkit-details-marker{display:none}
+  .basis summary::before{content:"▸ ";color:var(--acc)}
+  .basis[open] summary::before{content:"▾ "}
+  .basis summary:hover{color:var(--acc)}
+  .basis .res{padding:2px 0 9px}
+  .basis .res .k{color:var(--muted)}
+  .basis .res .v{font-size:17px;color:var(--n12)}
+
+  .hint{font-size:11.5px;line-height:1.7;color:var(--muted-2);margin:9px 0 0}
+  .hint b{color:var(--ink);font-weight:600}
+  .hint.warn{color:var(--warn-ink)}
+  .hint.warn b{color:var(--warn-ink)}
+
+  /* 卡内速查条 */
+  .ref{margin:10px 0 0;padding:9px 11px;list-style:none;border-radius:10px;
+       background:color-mix(in srgb,var(--n3) 9%,transparent);border:1px solid var(--line)}
+  .ref li{display:flex;justify-content:space-between;gap:10px;font:600 11px/1.75 var(--mono);color:var(--muted-2)}
+  .ref b{color:var(--ink);font-weight:600}
+
+  footer{margin-top:22px;text-align:center;font:600 11px/1.9 var(--mono);color:var(--muted-2);letter-spacing:.02em}
+  #toast{
+    position:fixed;left:50%;bottom:30px;transform:translate(-50%,14px);opacity:0;pointer-events:none;
+    background:var(--n1);color:var(--n8);font:600 12.5px/1 var(--mono);
+    padding:11px 16px;border-radius:22px;border:1px solid var(--n10);
+    box-shadow:0 12px 30px -14px color-mix(in srgb,var(--n0) 85%,transparent);transition:.2s;
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media (max-width:430px){
+    body{padding:0 11px 44px}
+    .card{padding:14px;border-radius:15px}
+    .res .v{font-size:17.5px}
+    .res .v.hero{font-size:23px}
+    .topbar{padding:10px 0}
+    .tag,.brand p{display:none}
+    .btn{padding:9px 11px;font-size:12px;white-space:nowrap}
+  }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+  /* 打印：纸张只有黑白，不套 Nord */
+  @media print{
+    body{background:#fff;padding:0;color:#000}
+    .topbar{position:static;border-color:#d8dee9;background:none}
+    .btn,.chips{display:none}
+    .card{background:#fff;border:1px solid #d8dee9;box-shadow:none;break-inside:avoid}
+    .badge{background:#e5e9f0;color:#2e3440;box-shadow:none}
+    .formula{background:#f4f6f9;color:#2e3440}
+    .out{background:#fafafa;box-shadow:none;border:1px solid #d8dee9}
+    .out::after{display:none}
+    .res .k,.res .v,.res .v.hero,.res .v.alt,.status{color:#000;text-shadow:none}
+    .hint,.hint.warn,.hint.warn b,footer,.basis summary,.ref li,.ref b{color:#2e3440}
+    input,select{background:#fff;color:#000;border:1px solid #d8dee9;box-shadow:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="logo">布</div>
+    <div class="brand">
+      <h1>面料换算工具</h1>
+      <p>FC-5 · 公斤 / 米 / 码 / 克重 / 空差</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="btnReset">恢复示例</button>
+  </div>
+
+  <div class="cards">
+
+    <!-- ① -->
+    <section class="card">
+      <div class="chead"><span class="badge">01</span><h2>1 公斤出多少米</h2><span class="tag">门幅 × 克重 → 长度</span></div>
+      <div class="formula">1公斤米数 = 1000 ÷ 门幅(m) ÷ 克重(g/m²)</div>
+      <div class="fields">
+        <div class="f"><label>门幅 / 幅宽
+            <select class="unit" id="a_wunit"><option value="m">m</option><option value="cm">cm</option><option value="in">英寸</option></select>
+          </label>
+          <input id="a_width" type="number" step="0.01" inputmode="decimal" value="1.4">
+        </div>
+        <div class="f"><label>克重
+            <select class="unit" id="a_gunit"><option value="gm2">g/m²</option><option value="ozyd2">oz/yd²</option></select>
+          </label>
+          <input id="a_gsm" type="number" step="1" inputmode="decimal" value="150">
+        </div>
+        <div class="f wide"><label>每卷重量 (kg)</label>
+          <input id="a_rollkg" type="number" step="0.5" inputmode="decimal" value="25">
+        </div>
+      </div>
+      <div class="chips" data-chips="width" data-target="a_width" data-unit="a_wunit">
+        <button class="chip" data-w="1.4" data-u="m">1.4m</button>
+        <button class="chip" data-w="1.5" data-u="m">1.5m</button>
+        <button class="chip" data-w="1.6" data-u="m">1.6m</button>
+        <button class="chip" data-w="57" data-u="in">57"</button>
+        <button class="chip" data-w="58" data-u="in">58"</button>
+      </div>
+      <div class="out">
+        <div class="res hero-row"><span class="k">1 公斤出米数</span><span class="v hero" id="a_mkg">—</span></div>
+        <div class="res"><span class="k">1 公斤出码数</span><span class="v" id="a_ykg">—</span></div>
+        <div class="res"><span class="k">每卷出米数</span><span class="v" id="a_rollm">—</span></div>
+        <div class="res"><span class="k">每卷出码数</span><span class="v" id="a_rolly">—</span></div>
+        <div class="res"><span class="k">每米重量 / 每码重量</span><span class="v" id="a_w">—</span></div>
+        <div class="status" id="a_status">—</div>
+      </div>
+      <p class="hint">门幅填<b>有效门幅</b>（布边不算），梭织常见 57"/58" 可直接点按键；克重填<b>成品克重</b>而非毛坯克重，否则算出米数会偏多。</p>
+    </section>
+
+    <!-- ② -->
+    <section class="card">
+      <div class="chead"><span class="badge">02</span><h2>公斤价 → 净布价</h2><span class="tag">扣纸管 / 空差</span></div>
+      <div class="formula">净布价 = 每卷金额 ÷ 实得净布重量 = 公斤价 × 毛重 ÷（毛重 − 纸管 − 空差）</div>
+      <div class="fields">
+        <div class="f"><label>公斤价（含纸管）</label><input id="b_price" type="number" step="0.01" inputmode="decimal" value="28"></div>
+        <div class="f"><label>每卷毛重 (kg)</label><input id="b_base" type="number" step="0.5" inputmode="decimal" value="25"></div>
+        <div class="f"><label>纸管 (kg)</label><input id="b_tube" type="number" step="0.1" inputmode="decimal" value="0.5"></div>
+        <div class="f"><label>空差
+            <select class="unit" id="b_gunit"><option value="kg">kg</option><option value="%">按 %</option></select>
+          </label>
+          <input id="b_gap" type="number" step="0.1" inputmode="decimal" value="1.5">
+        </div>
+      </div>
+      <div class="chips" data-chips="set">
+        <button class="chip" data-set="b_gap" data-value="1.5" data-set-unit="b_gunit" data-unit-value="kg">空差1.5kg</button>
+        <button class="chip" data-set="b_gap" data-value="1" data-set-unit="b_gunit" data-unit-value="kg">空差1kg</button>
+        <button class="chip" data-set="b_tube" data-value="0.5">纸管0.5</button>
+        <button class="chip" data-set="b_tube" data-value="0.3">纸管0.3</button>
+      </div>
+      <div class="out">
+        <div class="res hero-row"><span class="k">净布价（实得布单价）</span><span class="v hero" id="b_net">—</span></div>
+        <div class="res"><span class="k">实得净布重量</span><span class="v" id="b_netkg">—</span></div>
+        <div class="res"><span class="k">每卷金额（按毛重）</span><span class="v" id="b_roll">—</span></div>
+        <div class="res"><span class="k">比公斤价高</span><span class="v" id="b_up">—</span></div>
+        <div class="status" id="b_status">—</div>
+      </div>
+      <details class="basis">
+        <summary>对照口径：纸管空差也按布价卖（很少用）</summary>
+        <div class="res"><span class="k">对照净布价</span><span class="v alt" id="b_net2">—</span></div>
+      </details>
+      <p class="hint warn">报价是<b>含纸管</b>的公斤价，每卷付的是毛重的钱，实际到手的布少掉纸管和空差，所以净布价一定高于公斤价。</p>
+    </section>
+
+    <!-- ③ -->
+    <section class="card">
+      <div class="chead"><span class="badge">03</span><h2>空差折算</h2><span class="tag">93空 / 97空</span></div>
+      <div class="formula">实际单价 = 报价 ÷ 折扣率　　折扣率 = 1 − 空差%</div>
+      <div class="fields">
+        <div class="f"><label>报价
+            <select class="unit" id="c_unit">
+              <option value="元/米" selected>元/米</option>
+              <option value="元/码">元/码</option>
+              <option value="元/kg">元/kg</option>
+            </select>
+          </label>
+          <input id="c_quote" type="number" step="0.01" inputmode="decimal" value="4">
+        </div>
+        <div class="f"><label>空差 %</label><input id="c_gap" type="number" step="1" inputmode="decimal" value="7"></div>
+      </div>
+      <div class="chips" data-chips="set">
+        <button class="chip" data-set="c_gap" data-value="7">93空 7%</button>
+        <button class="chip" data-set="c_gap" data-value="5">95空 5%</button>
+        <button class="chip" data-set="c_gap" data-value="3">97空 3%</button>
+        <button class="chip" data-set="c_gap" data-value="1">99空 1%</button>
+      </div>
+      <div class="out">
+        <div class="res hero-row"><span class="k">实际单价</span><span class="v hero" id="c_actual">—</span></div>
+        <div class="res"><span class="k">折扣率</span><span class="v" id="c_rate">—</span></div>
+        <div class="res"><span class="k">100 元实得数量</span><span class="v" id="c_goods">—</span></div>
+        <div class="status" id="c_status">—</div>
+      </div>
+      <p class="hint">「93空」= 空差 7%，直接点按键即可。市场说的“不足码 / 短码”也是这一条；算出的实际价可再代入 ② 或 ⑤。</p>
+      <ul class="ref">
+        <li><b>93 空</b><span>空差 7% → ÷0.93</span></li>
+        <li><b>95 空</b><span>空差 5% → ÷0.95</span></li>
+        <li><b>97 空</b><span>空差 3% → ÷0.97</span></li>
+        <li><b>99 空</b><span>空差 1% → ÷0.99</span></li>
+      </ul>
+    </section>
+
+    <!-- ④ -->
+    <section class="card">
+      <div class="chead"><span class="badge">04</span><h2>码价 ⇄ 米价</h2><span class="tag">1码 = 0.9144米</span></div>
+      <div class="formula">米价 = 码价 ÷ 0.9144　　码价 = 米价 × 0.9144</div>
+      <div class="fields">
+        <div class="f"><label>码价 (元/码)</label><input id="d_yard" type="number" step="0.01" inputmode="decimal" value="10"></div>
+        <div class="f"><label>米价 (元/米)</label><input id="d_meter" type="number" step="0.01" inputmode="decimal" value="10.9361"></div>
+      </div>
+      <div class="out">
+        <div class="res hero-row"><span class="k">当前换算</span><span class="v hero txt" id="d_note">—</span></div>
+        <div class="res"><span class="k">米价比码价高</span><span class="v" id="d_diff">—</span></div>
+        <div class="res"><span class="k">100 米折合码数</span><span class="v" id="d_len">—</span></div>
+        <div class="status" id="d_status">—</div>
+      </div>
+      <p class="hint">改任意一边，另一边自动算（以你刚改的那边为准）。注意确认是否<b>足码</b>——够 36 英寸才算 1 码；有人说的「尺」是市尺（⅓ 米），别当码用。</p>
+      <ul class="ref">
+        <li><b>1 米</b><span>1.0936 码</span></li>
+        <li><b>1 码</b><span>0.9144 米</span></li>
+        <li><b>1 码</b><span>2.7432 市尺</span></li>
+        <li><b>1 米</b><span>3 市尺</span></li>
+      </ul>
+    </section>
+
+    <!-- ⑤ -->
+    <section class="card wide">
+      <div class="chead"><span class="badge">05</span><h2>公斤价 ⇄ 米价 ⇄ 码价</h2><span class="tag">带克重 / 门幅</span></div>
+      <div class="formula">公斤价 = 码价 × 1000 ÷ (0.9144 × 门幅 × 克重)　　米价 = 公斤价 × 门幅 × 克重 ÷ 1000</div>
+      <div class="fields">
+        <div class="f"><label>已知价格
+            <select class="unit" id="e_unit">
+              <option value="码">元/码</option>
+              <option value="米">元/米</option>
+              <option value="千克">元/kg</option>
+            </select>
+          </label>
+          <input id="e_val" type="number" step="0.01" inputmode="decimal" value="15">
+        </div>
+        <div class="f"><label>门幅 / 幅宽
+            <select class="unit" id="e_wunit"><option value="m">m</option><option value="cm">cm</option><option value="in">英寸</option></select>
+          </label>
+          <input id="e_width" type="number" step="0.01" inputmode="decimal" value="1.4">
+        </div>
+        <div class="f"><label>克重
+            <select class="unit" id="e_gunit"><option value="gm2">g/m²</option><option value="ozyd2">oz/yd²</option></select>
+          </label>
+          <input id="e_gsm" type="number" step="1" inputmode="decimal" value="150">
+        </div>
+      </div>
+      <div class="chips" data-chips="width" data-target="e_width" data-unit="e_wunit">
+        <button class="chip" data-w="1.4" data-u="m">1.4m</button>
+        <button class="chip" data-w="1.5" data-u="m">1.5m</button>
+        <button class="chip" data-w="1.6" data-u="m">1.6m</button>
+        <button class="chip" data-w="57" data-u="in">57"</button>
+        <button class="chip" data-w="58" data-u="in">58"</button>
+      </div>
+      <div class="out">
+        <div class="res hero-row"><span class="k">公斤价</span><span class="v hero" id="e_kg">—</span></div>
+        <div class="res"><span class="k">米价</span><span class="v" id="e_m">—</span></div>
+        <div class="res"><span class="k">码价</span><span class="v" id="e_y">—</span></div>
+        <div class="res"><span class="k">每米重量 / 每码重量</span><span class="v" id="e_w">—</span></div>
+        <div class="res"><span class="k">1 公斤出米数 / 出码数</span><span class="v" id="e_mkg">—</span></div>
+        <div class="status" id="e_status">—</div>
+      </div>
+      <p class="hint">例：门幅 1.4m、克重 150g、码价 15 元/码 → 公斤价 78.12 元/kg（原笔记写 78.11，是末位四舍五入差异）。牛仔布常说 10oz、11oz，克重单位选 oz/yd² 即可。</p>
+    </section>
+
+  </div>
+
+  <footer>
+    点任意结果数字即可复制
+  </footer>
+</div>
+<div id="toast"></div>
+
+<script>
+// ==== MATH START ====
+const YARD_M = 0.9144;            // 1码 = 0.9144米
+const INCH_M = 0.0254;            // 1英寸 = 0.0254米
+const OZ_YD2_G_M2 = 28.349523125 / 0.83612736; // 1 oz/yd² ≈ 33.9057 g/m²
+
+/* 单位换算：门幅 → 米 */
+function widthToMeters(value, unit) {
+  if (!(value > 0)) return NaN;
+  if (unit === 'cm') return value / 100;
+  if (unit === 'in') return value * INCH_M;
+  return value;
+}
+/* 单位换算：克重 → g/m² */
+function gsmFrom(value, unit) {
+  if (!(value > 0)) return NaN;
+  return unit === 'ozyd2' ? value * OZ_YD2_G_M2 : value;
+}
+/* 空差：按 kg 或按标称卷重的百分比 */
+function gapInKg(gapValue, unit, baseKg) {
+  if (!(gapValue >= 0) || !(baseKg > 0)) return NaN;
+  return unit === '%' ? baseKg * gapValue / 100 : gapValue;
+}
+
+/* ① 1公斤出的米数 / 码数 */
+function metersPerKg(widthM, gsm) {
+  if (!(widthM > 0) || !(gsm > 0)) return NaN;
+  return 1000 / (widthM * gsm);
+}
+function yardsPerKg(widthM, gsm) {
+  return metersPerKg(widthM, gsm) / YARD_M;
+}
+function gramsPerMeter(widthM, gsm) {
+  if (!(widthM > 0) || !(gsm > 0)) return NaN;
+  return widthM * gsm;
+}
+function gramsPerYard(widthM, gsm) {
+  return gramsPerMeter(widthM, gsm) * YARD_M;
+}
+
+/* ② 净布价 = 每卷金额 ÷ 实得净布重量
+   报价含纸管：每卷按毛重付款，实际到手的布要扣掉纸管和空差
+   = 公斤价 × 毛重 ÷ (毛重 − 纸管 − 空差) */
+function netPricePerKg(kgPrice, baseKg, tubeKg, gapKg) {
+  const net = baseKg - tubeKg - gapKg;
+  if (!(baseKg > 0) || !(net > 0)) return NaN;
+  return kgPrice * baseKg / net;
+}
+/* ② 对照口径：对方把纸管+空差也算成布的重量计费，但净布仍按毛重给足 */
+function netPricePerKgExtraBasis(kgPrice, baseKg, tubeKg, gapKg) {
+  if (!(baseKg > 0)) return NaN;
+  return kgPrice / baseKg * (baseKg + tubeKg + gapKg);
+}
+/* ② 每卷金额（报价含纸管，按毛重结算） */
+function rollAmount(kgPrice, baseKg) {
+  if (!(baseKg > 0)) return NaN;
+  return kgPrice * baseKg;
+}
+
+/* ③ 空差折算：实际单价 = 报价 ÷ (1 − 空差%) */
+function priceWithGap(quote, gapPercent) {
+  const rate = 1 - gapPercent / 100;
+  if (!(rate > 0)) return NaN;
+  return quote / rate;
+}
+function gapRate(gapPercent) {
+  return 1 - gapPercent / 100;
+}
+
+/* ④ 码价 ⇄ 米价 */
+function yardPriceToMeterPrice(yardPrice) { return yardPrice / YARD_M; }
+function meterPriceToYardPrice(meterPrice) { return meterPrice * YARD_M; }
+
+/* ⑤ 公斤价 ⇄ 米价 ⇄ 码价 */
+function pricePerKgFromYardPrice(yardPrice, widthM, gsm) {
+  if (!(widthM > 0) || !(gsm > 0)) return NaN;
+  return yardPrice * 1000 / (YARD_M * widthM * gsm);
+}
+function pricePerKgFromMeterPrice(meterPrice, widthM, gsm) {
+  if (!(widthM > 0) || !(gsm > 0)) return NaN;
+  return meterPrice * 1000 / (widthM * gsm);
+}
+function pricePerMeterFromKg(kgPrice, widthM, gsm) {
+  if (!(widthM > 0) || !(gsm > 0)) return NaN;
+  return kgPrice * widthM * gsm / 1000;
+}
+function pricePerYardFromKg(kgPrice, widthM, gsm) {
+  // 1码 = 0.9144米，码比米短，故码价低于米价
+  return meterPriceToYardPrice(pricePerMeterFromKg(kgPrice, widthM, gsm));
+}
+/* 三价互转：unit 为 '千克' | '米' | '码' */
+function priceTriangle(value, unit, widthM, gsm) {
+  const out = { kg: NaN, m: NaN, yard: NaN };
+  if (!(value > 0) || !(widthM > 0) || !(gsm > 0)) return out;
+  if (unit === '千克') {
+    out.kg = value;
+    out.m = pricePerMeterFromKg(value, widthM, gsm);
+    out.yard = pricePerYardFromKg(value, widthM, gsm);
+  } else if (unit === '米') {
+    out.m = value;
+    out.kg = pricePerKgFromMeterPrice(value, widthM, gsm);
+    out.yard = meterPriceToYardPrice(value);
+  } else {
+    out.yard = value;
+    out.m = yardPriceToMeterPrice(value);
+    out.kg = pricePerKgFromYardPrice(value, widthM, gsm);
+  }
+  return out;
+}
+
+const Calc = {
+  YARD_M, INCH_M, OZ_YD2_G_M2, widthToMeters, gsmFrom, gapInKg,
+  metersPerKg, yardsPerKg, gramsPerMeter, gramsPerYard,
+  netPricePerKg, netPricePerKgExtraBasis, rollAmount, priceWithGap, gapRate,
+  yardPriceToMeterPrice, meterPriceToYardPrice,
+  pricePerKgFromYardPrice, pricePerKgFromMeterPrice,
+  pricePerMeterFromKg, pricePerYardFromKg, priceTriangle,
+};
+// ==== MATH END ====
+
+/* ---------------- 界面 ---------------- */
+const $ = (id) => document.getElementById(id);
+const val = (id) => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : NaN; };
+
+function fmt(v, d) {
+  if (!Number.isFinite(v)) return '—';
+  const s = v.toFixed(d === undefined ? 2 : d);
+  return s === '-0.00' ? '0.00' : s;
+}
+function put(id, text, unit) {
+  const el = $(id);
+  el.dataset.copy = text;
+  el.innerHTML = text === '—' ? '—' : (text + (unit ? '<small>' + unit + '</small>' : ''));
+}
+/* 屏幕底部的状态行：告诉用户「为什么是 —」 */
+function setStatus(id, text, warn) {
+  const el = $(id);
+  if (!el) return;
+  el.textContent = text;
+  el.classList.toggle('warn', !!warn);
+}
+
+/* ① */
+function renderA() {
+  const wRaw = val('a_width'), gRaw = val('a_gsm'), roll = val('a_rollkg');
+  const w = Calc.widthToMeters(wRaw, $('a_wunit').value);
+  const g = Calc.gsmFrom(gRaw, $('a_gunit').value);
+  const mkg = Calc.metersPerKg(w, g), ykg = Calc.yardsPerKg(w, g);
+  put('a_mkg', fmt(mkg, 2), ' 米/kg');
+  put('a_ykg', fmt(ykg, 2), ' 码/kg');
+  put('a_rollm', fmt(mkg * roll, 1), ' 米/卷');
+  put('a_rolly', fmt(ykg * roll, 1), ' 码/卷');
+  put('a_w', fmt(Calc.gramsPerMeter(w, g), 1) + ' / ' + fmt(Calc.gramsPerYard(w, g), 1), ' g');
+  if (!(w > 0)) setStatus('a_status', '门幅要大于 0 —— 请检查门幅数值和单位', true);
+  else if (!(g > 0)) setStatus('a_status', '克重要大于 0 —— 请检查克重数值和单位', true);
+  else if (!(roll > 0)) setStatus('a_status', '每卷重量要大于 0，卷长暂不计算', true);
+  else setStatus('a_status', fmt(w, 3) + ' m × ' + fmt(g, 0) + ' g/m² → 每米 ' + fmt(Calc.gramsPerMeter(w, g), 1) + ' g');
+}
+
+/* ② */
+function renderB() {
+  const p = val('b_price'), base = val('b_base');
+  const tubeRaw = val('b_tube'), tube = Number.isFinite(tubeRaw) ? tubeRaw : 0;
+  const gapRaw = Calc.gapInKg(val('b_gap'), $('b_gunit').value, base);
+  const gap = Number.isFinite(gapRaw) ? gapRaw : 0;
+  const netKg = base - tube - gap;
+  const net = Calc.netPricePerKg(p, base, tube, gap);
+  put('b_net', fmt(net, 2), ' 元/kg');
+  put('b_netkg', fmt(netKg, 2), ' kg');
+  put('b_roll', fmt(Calc.rollAmount(p, base), 2), ' 元');
+  put('b_up', (Number.isFinite(net) && p > 0) ? fmt((net / p - 1) * 100, 1) : '—', ' %');
+  put('b_net2', fmt(Calc.netPricePerKgExtraBasis(p, base, tube, gap), 2), ' 元/kg');
+  if (!(p > 0)) setStatus('b_status', '公斤价要大于 0', true);
+  else if (!(base > 0)) setStatus('b_status', '每卷毛重要大于 0', true);
+  else if (!(tube >= 0) && Number.isFinite(tubeRaw)) setStatus('b_status', '纸管不能为负数', true);
+  else if (!(netKg > 0)) setStatus('b_status', '纸管 + 空差已占满毛重，实得净布为 0 —— 请检查输入', true);
+  else setStatus('b_status', fmt(base, 2) + ' − ' + fmt(tube, 2) + ' 纸管 − ' + fmt(gap, 2) + ' 空差 = 实得布 ' + fmt(netKg, 2) + ' kg');
+}
+
+/* ③ */
+function renderC() {
+  const q = val('c_quote'), gapPct = val('c_gap');
+  const unit = $('c_unit').value;            // 元/米 | 元/码 | 元/kg
+  const qtyUnit = unit.replace('元/', '');   // 米 | 码 | kg
+  const actual = Calc.priceWithGap(q, gapPct);
+  const rate = Calc.gapRate(gapPct);
+  put('c_actual', fmt(actual, 2), ' ' + unit);
+  put('c_rate', Number.isFinite(rate) ? fmt(rate * 100, 1) : '—', ' %');
+  put('c_goods', fmt(100 / actual, 2), ' ' + qtyUnit);
+  if (!(q > 0)) setStatus('c_status', '报价要大于 0', true);
+  else if (!(gapPct >= 0)) setStatus('c_status', '空差不能为负数', true);
+  else if (!(gapPct < 100)) setStatus('c_status', '空差要小于 100%，否则折扣率为 0', true);
+  else setStatus('c_status', fmt(q, 2) + ' ÷ ' + fmt(rate, 4) + ' → 每' + qtyUnit + '实付 ' + fmt(actual, 2) + ' 元');
+}
+
+/* ④ 改哪边以哪边为准，另一边同步写回 */
+function renderD(from) {
+  const yardEl = $('d_yard'), meterEl = $('d_meter');
+  let yard = val('d_yard'), meter = val('d_meter');
+  if (from === 'meter') {
+    yard = Calc.meterPriceToYardPrice(meter);
+    if (Number.isFinite(yard)) yardEl.value = yard.toFixed(4);
+  } else {
+    meter = Calc.yardPriceToMeterPrice(yard);
+    if (Number.isFinite(meter)) meterEl.value = meter.toFixed(4);
+  }
+  const label = (from === 'meter') ? '米价 ' + fmt(meter, 2) + ' → 码价 ' + fmt(yard, 2)
+                                   : '码价 ' + fmt(yard, 2) + ' → 米价 ' + fmt(meter, 2);
+  put('d_note', label, '');
+  put('d_diff', Math.abs(yard) > 0 ? fmt((meter / yard - 1) * 100, 1) : '—', ' %');
+  put('d_len', fmt(100 / Calc.YARD_M, 1), ' 码');
+  if (!(yard > 0) || !(meter > 0)) setStatus('d_status', '码价和米价都要大于 0', true);
+  else setStatus('d_status', (from === 'meter' ? '基准：米价' : '基准：码价') + ' · 1 码 = 0.9144 米');
+}
+
+/* ⑤ */
+function renderE() {
+  const unit = $('e_unit').value;
+  const w = Calc.widthToMeters(val('e_width'), $('e_wunit').value);
+  const g = Calc.gsmFrom(val('e_gsm'), $('e_gunit').value);
+  const t = Calc.priceTriangle(val('e_val'), unit, w, g);
+  put('e_kg', fmt(t.kg, 2), ' 元/kg');
+  put('e_m', fmt(t.m, 2), ' 元/米');
+  put('e_y', fmt(t.yard, 2), ' 元/码');
+  put('e_w', fmt(Calc.gramsPerMeter(w, g), 1) + ' / ' + fmt(Calc.gramsPerYard(w, g), 1), ' g');
+  put('e_mkg', fmt(Calc.metersPerKg(w, g), 2) + ' / ' + fmt(Calc.yardsPerKg(w, g), 2), ' 米/码');
+  if (!(val('e_val') > 0)) setStatus('e_status', '已知价格要大于 0', true);
+  else if (!(w > 0)) setStatus('e_status', '门幅要大于 0 —— 请检查门幅数值和单位', true);
+  else if (!(g > 0)) setStatus('e_status', '克重要大于 0 —— 请检查克重数值和单位', true);
+  else setStatus('e_status', '已知 ' + unit + '价 ' + fmt(val('e_val'), 2) + ' 元，按门幅 ' + fmt(w, 3) + ' m / 克重 ' + fmt(g, 0) + ' g 换算');
+}
+
+function renderAll() { renderA(); renderB(); renderC(); renderD('yard'); renderE(); }
+
+['a_width', 'a_gsm', 'a_rollkg'].forEach(id => $(id).addEventListener('input', renderA));
+['a_wunit', 'a_gunit'].forEach(id => $(id).addEventListener('change', renderA));
+['b_price', 'b_base', 'b_tube', 'b_gap'].forEach(id => $(id).addEventListener('input', renderB));
+$('b_gunit').addEventListener('change', renderB);
+['c_quote', 'c_gap'].forEach(id => $(id).addEventListener('input', renderC));
+$('c_unit').addEventListener('change', renderC);
+$('d_yard').addEventListener('input', () => renderD('yard'));
+$('d_meter').addEventListener('input', () => renderD('meter'));
+['e_val', 'e_width', 'e_gsm'].forEach(id => $(id).addEventListener('input', renderE));
+['e_unit', 'e_wunit', 'e_gunit'].forEach(id => $(id).addEventListener('change', renderE));
+
+/* 快捷键：门幅预设 / 空差预设 */
+document.querySelectorAll('[data-chips]').forEach(box => {
+  box.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    if (box.dataset.chips === 'width') {
+      const target = $(box.dataset.target), unitSel = $(box.dataset.unit);
+      target.value = chip.dataset.w;
+      unitSel.value = chip.dataset.u;
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+      unitSel.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
+    const target = $(chip.dataset.set || '');
+    if (!target) return;
+    target.value = chip.dataset.value;
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+    const unitSel = $(chip.dataset.setUnit || '');
+    if (unitSel) {
+      unitSel.value = chip.dataset.unitValue;
+      unitSel.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
+});
+
+/* 点进输入框即全选，像计算器那样直接覆盖输入 */
+document.querySelectorAll('input[type=number]').forEach(el => {
+  el.addEventListener('focus', () => el.select());
+});
+
+/* 恢复示例 */
+const SELECT_DEFAULTS = { a_wunit: 'm', a_gunit: 'gm2', b_gunit: 'kg', c_unit: '元/米', e_unit: '码', e_wunit: 'm', e_gunit: 'gm2' };
+$('btnReset').addEventListener('click', () => {
+  document.querySelectorAll('input[type=number]').forEach(el => { el.value = el.defaultValue; });
+  Object.entries(SELECT_DEFAULTS).forEach(([id, v]) => { $(id).value = v; });
+  renderAll();
+});
+
+/* 点击结果复制 */
+const toast = $('toast');
+let toastTimer = null;
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 1200);
+}
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text).then(() => true).catch(() => fallbackCopy(text));
+  }
+  return Promise.resolve(fallbackCopy(text));
+}
+function fallbackCopy(text) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) { return false; }
+}
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('.v');
+  if (!el) return;
+  const text = el.dataset.copy;
+  if (!text || text === '—') return;
+  copyText(text).then(ok => showToast(ok ? '已复制 ' + text : '复制失败，请手动选择'));
+});
+
+renderAll();
+</script>
+</body>
+</html>
